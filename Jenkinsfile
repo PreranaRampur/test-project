@@ -69,7 +69,7 @@ set -eu
         stage('Deploy to Kubernetes') {
             steps {
 
-                sshagent(credentials: ['kind-ec2-ssh']) {
+                sshagent(credentials: ['kind-ssh-key']) {
 
                     sh '''
                         set -eu
