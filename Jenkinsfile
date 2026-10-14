@@ -48,7 +48,7 @@ pipeline {
                 sh '''
                     set -eu
 
-                    docker build -t "$IMAGE_URI" .
+                    docker build -t 722632731549.dkr.ecr.ap-south-1.amazonaws.com/project_ecr/mini_project:latest .
                 '''
             }
         }
