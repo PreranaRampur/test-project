@@ -54,16 +54,20 @@ pipeline {
         }
 
         stage('Push to ECR') {
-            steps {
-               sh '''
-    docker build -t mini_project:latest .
-    docker tag mini_project:latest \
-      722632731549.dkr.ecr.ap-south-1.amazonaws.com/project_ecr/mini_project:latest
-    docker push \
-      722632731549.dkr.ecr.ap-south-1.amazonaws.com/project_ecr/mini_project:latest
-'''
-            }
-        }
+steps {
+sh '''
+set -eu
+
+```
+        aws ecr get-login-password --region ap-south-1 | \
+        docker login --username AWS --password-stdin \
+        722632731549.dkr.ecr.ap-south-1.amazonaws.com
+
+        docker push 722632731549.dkr.ecr.ap-south-1.amazonaws.com/project_ecr/mini_project:latest
+    '''
+  }
+
+}
 
         stage('Deploy to Kubernetes') {
             steps {
