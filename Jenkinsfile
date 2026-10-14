@@ -66,30 +66,27 @@ set -eu
     }
 
 }
-        stage('Deploy to Kubernetes') {
-            steps {
+        
+    stage('Deploy to Kubernetes') {
+    steps {
+        sshagent(['kind-ssh-key']) {
+            sh '''
+                set -eu
 
-                sshagent(credentials: ['kind-ssh-key']) {
+                sed "s|IMAGE_PLACEHOLDER|$IMAGE_URI|g" \
+                  deployment.yaml > deployment-rendered.yaml
 
-                    sh '''
-                        set -eu
+                scp -o StrictHostKeyChecking=accept-new \
+                  deployment-rendered.yaml \
+                  ubuntu@13.126.217.241:/tmp/mini-project.yaml
 
-                        sed "s|IMAGE_PLACEHOLDER|$IMAGE_URI|g" \
-                            deployment.yaml > deployment-rendered.yaml
-
-                        scp -o StrictHostKeyChecking=accept-new \
-                            deployment-rendered.yaml \
-                            "$KIND_SSH_USER@$KIND_HOST:/tmp/mini-project.yaml"
-
-                        ssh -o StrictHostKeyChecking=accept-new \
-                            "$KIND_SSH_USER@$KIND_HOST" \
-                            "AWS_REGION='$AWS_REGION' ECR_REGISTRY='$ECR_REGISTRY' K8S_NAMESPACE='$K8S_NAMESPACE' bash -s" \
-                            < scripts/deploy-kind.sh
-                    '''
-                }
-            }
+                ssh -o StrictHostKeyChecking=accept-new \
+                  ubuntu@13.126.217.241 \
+                  "kubectl apply -f /tmp/mini-project.yaml"
+            '''
         }
     }
+}
 
     post {
 
