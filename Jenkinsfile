@@ -84,10 +84,10 @@ set -eu
                   ubuntu@13.126.217.241 \
                   "kubectl apply -f /tmp/mini-project.yaml"
             '''
-        }
-    }
+          }
+       }
+    } 
 }
-
     post {
 
         success {
@@ -106,5 +106,4 @@ set -eu
             '''
         }
     }
-}
-}
+  }
