@@ -5,8 +5,8 @@ pipeline {
     environment {
         AWS_REGION = 'ap-south-1'
 
-        ECR_REPOSITORY = 'mini_project'
-
+        ECR_REPOSITORY = 'project_ecr/mini_project'
+        ECR_REGISTRY = '722632731549.dkr.ecr.ap-south-1.amazonaws.com/project_ecr/mini_project'
         KIND_HOST = '13.233.105.203'
         KIND_SSH_USER = 'ubuntu'
 
