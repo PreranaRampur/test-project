@@ -78,11 +78,11 @@ set -eu
 
                 scp -o StrictHostKeyChecking=accept-new \
                   deployment-rendered.yaml \
-                  ubuntu@13.126.217.241'whoami'
+                  ubuntu@13.126.217.241:/tmp/mini_project.yaml
 
                 ssh -o StrictHostKeyChecking=accept-new \
                   ubuntu@13.126.217.241 \
-                  "kubectl apply -f /tmp/mini-project.yaml"
+                  "kubectl apply -f /tmp/mini_project.yaml"
             '''
           }
        }
