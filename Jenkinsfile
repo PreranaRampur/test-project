@@ -69,24 +69,21 @@ set -eu
         
     stage('Deploy to Kubernetes') {
     steps {
-        sshagent(['kind-ssh-key']) {
+        sshagent(credentials: ['kind-ssh-key']) {
             sh '''
                 set -eu
 
-                sed "s|IMAGE_PLACEHOLDER|$IMAGE_URI|g" \
-                  deployment.yaml > deployment-rendered.yaml
-
                 scp -o StrictHostKeyChecking=accept-new \
-                  deployment-rendered.yaml \
-                  ubuntu@13.126.217.241:/tmp/mini_project.yaml
+                    deployment-rendered.yaml \
+                    ubuntu@13.126.217.241:/tmp/mini_project.yaml
 
                 ssh -o StrictHostKeyChecking=accept-new \
-                  ubuntu@13.126.217.241 \
-                  "kubectl apply -f /tmp/mini_project.yaml"
+                    ubuntu@13.126.217.241 \
+                    "kubectl apply -f /tmp/mini_project.yaml"
             '''
-          }
-       }
-    } 
+        }
+    }
+}
 }
     post {
 
