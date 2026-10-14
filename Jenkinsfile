@@ -1,34 +1,54 @@
+
 pipeline {
     agent any
 
     environment {
-        AWS_REGION    = 'ap-south-1'
-        AWS_ACCOUNT   = '722632731549'
-        ECR_REPO      = 'project'
-        EKS_CLUSTER   = 'project_cluster'
+        AWS_REGION = 'ap-south-1'
+
+        ECR_REPOSITORY = 'mini_project'
+
+        KIND_HOST = '13.233.105.203'
+        KIND_SSH_USER = 'ubuntu'
+
         K8S_NAMESPACE = 'default'
-        KIND_HOST     = '65.0.131.38'
-        KIND_SSH_USER = 'redhat
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Build Image') {
+        stage('Prepare Image Details') {
             steps {
                 script {
-                    env.IMAGE_TAG = "${env.BUILD_NUMBER}"
-                    env.ECR_URI =
-                        "${env.AWS_ACCOUNT}.dkr.ecr.${env.AWS_REGION}.amazonaws.com/${env.ECR_REPO}"
-                    env.IMAGE_URI = "${env.ECR_URI}:${env.IMAGE_TAG}"
-                }
 
+                    env.AWS_ACCOUNT_ID = sh(
+                        script: 'aws sts get-caller-identity --query Account --output text',
+                        returnStdout: true
+                    ).trim()
+
+                    env.ECR_REGISTRY = "${env.AWS_ACCOUNT_ID}.dkr.ecr.${env.AWS_REGION}.amazonaws.com"
+
+                    env.IMAGE_TAG = sh(
+                        script: 'git rev-parse --short=12 HEAD',
+                        returnStdout: true
+                    ).trim()
+
+                    env.IMAGE_URI = "${env.ECR_REGISTRY}/${env.ECR_REPOSITORY}:${env.IMAGE_TAG}"
+
+                    echo "Image to publish: ${env.IMAGE_URI}"
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
                 sh '''
                     set -eu
+
                     docker build -t "$IMAGE_URI" .
                 '''
             }
@@ -36,56 +56,38 @@ pipeline {
 
         stage('Push to ECR') {
             steps {
-                withCredentials([
-                    [$class: 'AmazonWebServicesCredentialsBinding',
-                     credentialsId: 'aws-ecr-credentials']
-                ]) {
-                    sh '''
-                        set -eu
+                sh '''
+                    set -eu
 
-                        aws ecr get-login-password \
-                          --region "$AWS_REGION" |
-                          docker login \
-                          --username AWS \
-                          --password-stdin \
-                          "$AWS_ACCOUNT.dkr.ecr.$AWS_REGION.amazonaws.com"
+                    aws ecr get-login-password --region "$AWS_REGION" |
+                    docker login \
+                        --username AWS \
+                        --password-stdin "$ECR_REGISTRY"
 
-                        docker push "$IMAGE_URI"
-                    '''
-                }
+                    docker push "$IMAGE_URI"
+                '''
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                withCredentials([
-                    [$class: 'AmazonWebServicesCredentialsBinding',
-                     credentialsId: 'aws-ecr-credentials']
-                ]) {
+
+                sshagent(credentials: ['kind-ec2-ssh']) {
+
                     sh '''
                         set -eu
 
-                        aws eks update-kubeconfig \
-                          --region "$AWS_REGION" \
-                          --name "$EKS_CLUSTER"
+                        sed "s|IMAGE_PLACEHOLDER|$IMAGE_URI|g" \
+                            deployment.yaml > deployment-rendered.yaml
 
-                        IMAGE_DIGEST=$(aws ecr describe-images \
-                          --region "$AWS_REGION" \
-                          --repository-name "$ECR_REPO" \
-                          --image-ids imageTag="$IMAGE_TAG" \
-                          --query 'imageDetails[0].imageDigest' \
-                          --output text)
+                        scp -o StrictHostKeyChecking=accept-new \
+                            deployment-rendered.yaml \
+                            "$KIND_SSH_USER@$KIND_HOST:/tmp/mini-project.yaml"
 
-                        test -n "$IMAGE_DIGEST"
-                        test "$IMAGE_DIGEST" != "None"
-
-                        kubectl -n "$K8S_NAMESPACE" set image \
-                          "deployment/$DEPLOYMENT" \
-                          "$CONTAINER=$ECR_URI@$IMAGE_DIGEST"
-
-                        kubectl -n "$K8S_NAMESPACE" rollout status \
-                          "deployment/$DEPLOYMENT" \
-                          --timeout=180s
+                        ssh -o StrictHostKeyChecking=accept-new \
+                            "$KIND_SSH_USER@$KIND_HOST" \
+                            "AWS_REGION='$AWS_REGION' ECR_REGISTRY='$ECR_REGISTRY' K8S_NAMESPACE='$K8S_NAMESPACE' bash -s" \
+                            < scripts/deploy-kind.sh
                     '''
                 }
             }
@@ -93,14 +95,21 @@ pipeline {
     }
 
     post {
+
         success {
             echo 'Image pushed to ECR and deployment completed successfully.'
         }
+
         failure {
             echo 'Pipeline failed. Check Jenkins logs for details.'
         }
+
         always {
-            sh 'docker logout "${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com" || true'
+            sh '''
+                if [ -n "${ECR_REGISTRY:-}" ]; then
+                    docker logout "$ECR_REGISTRY" || true
+                fi
+            '''
         }
     }
 }
