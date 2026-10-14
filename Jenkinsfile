@@ -7,7 +7,7 @@ pipeline {
         ECR_REPOSITORY = 'project_ecr/mini_project'
         IMAGE_TAG=" latest"
         ECR_REGISTRY = '722632731549.dkr.ecr.ap-south-1.amazonaws.com'
-        KIND_HOST = '13.233.105.203'
+        KIND_HOST = '13.126.217.241'
         KIND_SSH_USER = 'ubuntu'
         K8S_NAMESPACE = 'default'
     }
