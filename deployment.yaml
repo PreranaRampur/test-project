@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mini_project
+  name: mini-project
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: mini_project
+      app: mini-project
   template:
     metadata:
       labels:
-        app: mini_project
+        app: mini-project
     spec:
       containers:
-        - name: mini_project
+        - name: mini-project
           image: 722632731549.dkr.ecr.ap-south-1.amazonaws.com/project_ecr/mini_project:latest
           imagePullPolicy: Always
           ports:
@@ -23,10 +23,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: mini_project-service
+  name: mini-project-service
 spec:
   selector:
-    app: mini_project
+    app: mini-project
   ports:
     - port: 80
       targetPort: 80
