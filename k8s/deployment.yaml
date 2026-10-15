@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: project-html
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: project-html
+  template:
+    metadata:
+      labels:
+        app: project-html
+    spec:
+      containers:
+        - name: project-html
+          image: nginx:latest
+          ports:
+            - containerPort: 80
