@@ -16,9 +16,6 @@ spec:
         app: mini-project
 
     spec:
-      imagePullSecrets:
-        - name: ecr-secret
-
       containers:
         - name: mini-project
           image: 722632731549.dkr.ecr.ap-south-1.amazonaws.com/project_ecr/mini_project:latest
@@ -26,7 +23,6 @@ spec:
 
           ports:
             - containerPort: 80
-              name: http
 
 ---
 apiVersion: v1
@@ -34,13 +30,12 @@ kind: Service
 
 metadata:
   name: mini-project-service
-
 spec:
-  type: ClusterIP
-
   selector:
     app: mini-project
 
   ports:
+      -protocol: TCP
       port: 80
       targetPort: 80
+      type: LoadBalancer
