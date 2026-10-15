@@ -67,14 +67,15 @@ set -eu
 
 }
         
-    stage('Deploy to Kubernetes') {
+    
+stage('Deploy to Kubernetes') {
     steps {
         sshagent(credentials: ['kind-ssh-key']) {
             sh '''
                 set -eu
 
                 scp -o StrictHostKeyChecking=accept-new \
-                    deployment-rendered.yaml \
+                    deployment.yaml \
                     ubuntu@13.126.217.241:/tmp/mini_project.yaml
 
                 ssh -o StrictHostKeyChecking=accept-new \
@@ -84,6 +85,7 @@ set -eu
         }
     }
 }
+
 }
     post {
 
