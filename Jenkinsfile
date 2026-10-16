@@ -38,8 +38,8 @@ stage('Login ECR'){
 stage('Push Image'){
     steps {
         sh '''
-        docker tag ${ECR_REPO}:${BUILD_NUMBER} ${IAMGE_URI}:${BUILD_NUMBER}
-        docker tag ${ECR_REPO}:${BUILD_NUMBER} ${IAMGE_URI}:latest
+        docker tag ${ECR_REPO}:${BUILD_NUMBER} ${IMAGE_URI}:${BUILD_NUMBER}
+        docker tag ${ECR_REPO}:${BUILD_NUMBER} ${IMAGE_URI}:latest
         
         docker push ${IMAGE_URI}:${BUILD_NUMBER}
         docker push ${IMAGE_URI}:latest
