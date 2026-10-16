@@ -53,7 +53,7 @@ stage('Deploy') {
         microk8s kubectl apply -f k8s/deployment.yaml
         microk8s kubectl apply -f k8s/service.yaml
         
-        microk8s kubectl roolout status deployment/project-html
+        microk8s kubectl rollout status deployment/project-html
         '''
     }
   }
