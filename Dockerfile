@@ -1,8 +1,13 @@
-FROM ubuntu:22.04
-RUN apt update && \ 
-apt install -y python3 python3-pip &&\  
-rm -rf /var/lib/apt/lists/*
+FROM eclipse-temurin:21-jre
+
 WORKDIR /app
-COPY index.html /app/index.html
+
+RUN useradd --system --uid 10001 --create-home appuser
+
+COPY --chown=appuser:appuser target/java-cicd-demo-1.0.0.jar /app/app.jar
+
+USER 10001
+
 EXPOSE 8080
-CMD ["python3", "-m", "http.server","8080", "index.html","/app"]
+
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/app.jar"]

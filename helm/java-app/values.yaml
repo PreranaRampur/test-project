@@ -1,0 +1,13 @@
+replicaCount: 2
+
+image:
+  repository: 722632731549.dkr.ecr.ap-south-1.amazonaws.com/project_ecr/mini_project
+  tag: latest
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8080
+
+containerPort: 8080
+
